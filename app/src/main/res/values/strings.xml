@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Sehaj Bani</string>
+
+    <string-array name="colors">
+        <item>White</item>
+        <item>Black</item>
+        <item>Sepia</item>
+        <item>Green</item>
+    </string-array>
+</resources>
