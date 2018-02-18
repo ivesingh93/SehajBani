@@ -1,4 +1,4 @@
-package com.sehaj.bani.player;
+package com.sehaj.bani.player.service;
 
 /**
  * Created by DELL on 1/29/2018.

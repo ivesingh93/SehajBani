@@ -11,4 +11,6 @@ public interface ShabadPlayerPresenter {
     void prepareTranslation(boolean teeka, boolean punjabi, boolean english);
 
     void prepareShabad(int startingId, int endingId);
+
+    void changeShabadView(int color_position);
 }

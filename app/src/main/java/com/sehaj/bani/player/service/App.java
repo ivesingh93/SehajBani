@@ -1,9 +1,11 @@
-package com.sehaj.bani.player;
+package com.sehaj.bani.player.service;
 
 import android.app.Activity;
 import android.app.Application;
 import android.os.Build;
 import android.os.Bundle;
+
+import com.sehaj.bani.player.service.NotificationManager;
 
 /**
  * Created by DELL on 1/29/2018.

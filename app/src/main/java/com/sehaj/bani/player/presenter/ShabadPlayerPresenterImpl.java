@@ -1,7 +1,9 @@
 package com.sehaj.bani.player.presenter;
 
 import android.app.Activity;
+import android.graphics.Color;
 
+import com.sehaj.bani.R;
 import com.sehaj.bani.player.model.ShabadPlayerInteractor;
 import com.sehaj.bani.player.model.ShabadPlayerInteractorImpl;
 import com.sehaj.bani.player.view.ShabadPlayerView;
@@ -62,5 +64,21 @@ public class ShabadPlayerPresenterImpl implements ShabadPlayerPresenter, ShabadP
     public void onShabadFetched(Shabad fetched_shabad) {
         shabadPlayerView.setFetchedShabadValues(fetched_shabad);
         prepareTranslation(false, false, false);
+    }
+
+    @Override
+    public void changeShabadView(int color_position){
+        int color_id = 0;
+        if (color_position == 0){
+            color_id = Color.WHITE;
+        }else if(color_position == 1){
+            color_id = Color.BLACK;
+        }else if(color_position == 2){
+            color_id = R.color.sepia;
+        }else if(color_position == 3){
+            color_id = R.color.green;
+        }
+
+        shabadPlayerView.changeShabadColor(color_id);
     }
 }

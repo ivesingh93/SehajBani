@@ -20,6 +20,8 @@ public interface ShabadPlayerView {
 
     void setFetchedShabadValues(Shabad fetched_shabad);
 
+    void changeShabadColor(int color);
+
     void showGurmukhi();
 
     void showGurmukhiTeeka();

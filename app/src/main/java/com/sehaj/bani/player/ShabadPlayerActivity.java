@@ -7,19 +7,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
-import android.media.session.PlaybackState;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v4.media.session.PlaybackStateCompat;
-import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Html;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,21 +24,19 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
+import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
-import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
 import com.sehaj.bani.R;
 import com.sehaj.bani.player.presenter.ShabadPlayerPresenterImpl;
+import com.sehaj.bani.player.service.MediaPlayerState;
+import com.sehaj.bani.player.service.ShabadPlayerForegroundService;
 import com.sehaj.bani.player.view.ShabadPlayerView;
 import com.sehaj.bani.rest.model.raagi.Shabad;
 
@@ -66,11 +61,8 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
     private Typeface gurbani_lipi_face;
     private ArrayList<Shabad> shabadsList;
     private Shabad current_shabad;
-    private ArrayAdapter<CharSequence> color_S_AA;
-    private ImageButton zoom_out_IB, zoom_in_IB;
-    private Spinner color_S;
-    private CheckBox teeka_CB, punjabi_CB, english_CB;
-    private boolean teeka, punjabi, english;
+
+    private ScrollView gurbani_SV;
     private SimpleExoPlayerView simpleExoPlayerView;
     private SimpleExoPlayer player;
     private boolean isBound;
@@ -78,6 +70,8 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
     private String[] shabadLinks, shabadTitles;
     private int originalShabadIndex = 0;
     public ShowShabadReceiver showShabadReceiver;
+    private ShabadDialog shabadDialog;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,7 +107,7 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
                 break;
 
             case R.id.action_font_settings:
-                create_dialog_box();
+                shabadDialog.create_dialog_box();
                 break;
 
         }
@@ -121,45 +115,15 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        doBindService();
-    }
-
-    @Override
     protected void onStop() {
         super.onStop();
         doUnbindService();
-        Log.i("Lifecycle", "onStop()");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        doUnbindService();
-        Log.i("Lifecycle", "onDestroy()");
         LocalBroadcastManager.getInstance(this).unregisterReceiver(showShabadReceiver);
-    }
-
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-        Log.i("Lifecycle", "onRestart()");
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        doBindService();
-        Log.i("Lifecycle", "onResume()");
-
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        Log.i("Lifecycle", "onPause()");
-
     }
 
     private void doBindService() {
@@ -204,40 +168,10 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
         return false;
     }
 
-    private void create_dialog_box(){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AlertDialogCustom);
-        View view = getLayoutInflater().inflate(R.layout.settings_shabad, null);
-        process_settings(view);
-        builder.setView(view);
-        AlertDialog dialog = builder.create();
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        dialog.show();
-    }
+    @Override
+    public void changeShabadColor(int color){
+        gurbani_SV.setBackgroundResource(color);
 
-    private void process_settings(View view){
-        zoom_out_IB = view.findViewById(R.id.zoom_out_IB);
-        zoom_in_IB = view.findViewById(R.id.zoom_in_IB);
-        color_S = view.findViewById(R.id.color_S);
-        teeka_CB = view.findViewById(R.id.teeka_CB);
-        punjabi_CB = view.findViewById(R.id.punjabi_CB);
-        english_CB = view.findViewById(R.id.english_CB);
-        teeka_CB.setChecked(teeka);
-        punjabi_CB.setChecked(punjabi);
-        english_CB.setChecked(english);
-        color_S_AA = ArrayAdapter.createFromResource(this, R.array.colors, R.layout.support_simple_spinner_dropdown_item);
-        color_S_AA.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
-        color_S.setAdapter(color_S_AA);
-        color_S.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                Toast.makeText(getApplicationContext(), ""+adapterView.getItemAtPosition(i), Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
-        });
     }
 
     public void onTranslationSelected(View view){
@@ -245,18 +179,18 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
 
         switch(view.getId()){
             case R.id.teeka_CB:
-                teeka = checked;
+                shabadDialog.setTeeka(checked);
                 break;
 
             case R.id.punjabi_CB:
-                punjabi = checked;
+                shabadDialog.setPunjabi(checked);
                 break;
 
             case R.id.english_CB:
-                english = checked;
+                shabadDialog.setEnglish(checked);
                 break;
         }
-        shabadPlayerPresenterImpl.prepareTranslation(teeka, punjabi, english);
+        shabadPlayerPresenterImpl.prepareTranslation(shabadDialog.isTeeka(), shabadDialog.isPunjabi(), shabadDialog.isEnglish());
     }
 
     private String teeka_null_case(String pad_arth, String arth){
@@ -286,12 +220,13 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
         shabad_title_TV = findViewById(R.id.shabad_title_TV);
         gurbani_lipi_face = Typeface.createFromAsset(getAssets(), "fonts/gurblipi_.ttf");
         gurbani_TV.setTypeface(gurbani_lipi_face);
-        teeka = false;
-        punjabi = false;
-        english = false;
         shabadLinks = new String[shabadsList.size()];
         shabadTitles = new String[shabadsList.size()];
         showShabadReceiver = new ShowShabadReceiver();
+        gurbani_SV = findViewById(R.id.gurbani_SV);
+        shabadDialog = new ShabadDialog(this, shabadPlayerPresenterImpl);
+        shabadPlayerPresenterImpl.changeShabadView(shabadDialog.getSharedPreferences().getInt("background_color_position", 0));
+
     }
 
     @Override
@@ -339,6 +274,7 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
             intent.putExtra(MediaPlayerState.SHABAD_LINKS, shabadLinks);
             intent.putExtra(MediaPlayerState.ORIGINAL_SHABAD, originalShabadIndex);
             startService(intent);
+            doBindService();
         }
     }
 
@@ -358,7 +294,7 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
         raagi_name_TV.setText(current_shabad.getRaagiName());
         shabad_title_TV.setText(current_shabad.getShabadEnglishTitle());
         shabadPlayerPresenterImpl.prepareShabad(current_shabad.getStartingId(), current_shabad.getEndingId());
-        shabadPlayerPresenterImpl.prepareTranslation(teeka, punjabi, english);
+        shabadPlayerPresenterImpl.prepareTranslation(shabadDialog.isTeeka(), shabadDialog.isPunjabi(), shabadDialog.isEnglish());
     }
 
     @Override

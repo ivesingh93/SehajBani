@@ -11,4 +11,7 @@
     <color name="facebookDark">#30487c</color>
     <color name="google">#d34836</color>
     <color name="googleDark">#c93e2c</color>
+
+    <color name="sepia">#EBE3CC</color>
+    <color name="green">#CFFCCF</color>
 </resources>

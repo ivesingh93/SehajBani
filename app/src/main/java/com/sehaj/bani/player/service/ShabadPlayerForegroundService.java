@@ -1,6 +1,5 @@
-package com.sehaj.bani.player;
+package com.sehaj.bani.player.service;
 
-import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -9,18 +8,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
-import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.util.Patterns;
-import android.widget.ImageButton;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
@@ -32,13 +28,13 @@ import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
-import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelection;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.sehaj.bani.R;
+import com.sehaj.bani.player.ShabadPlayerActivity;
 
 /**
  * Created by DELL on 1/29/2018.
@@ -63,7 +59,7 @@ public class ShabadPlayerForegroundService extends Service {
     private String[] shabad_links, shabad_titles;
     private String raagi_name;
     private int original_shabad_ind = 0;
-    private int lastWindowIndex = 0;
+    private int lastWindowIndex = -1;
 
     @Nullable
     @Override
@@ -104,6 +100,7 @@ public class ShabadPlayerForegroundService extends Service {
                 int latestWindowsIndex = player.getCurrentWindowIndex();
                 if(latestWindowsIndex != lastWindowIndex){
                     showNotification();
+                    Log.i("Show shabad", ""+latestWindowsIndex);
                     showShabad(latestWindowsIndex);
                     lastWindowIndex = latestWindowsIndex;
                 }
@@ -259,6 +256,7 @@ public class ShabadPlayerForegroundService extends Service {
                 .setAutoCancel(true)
                 .setCustomBigContentView(remoteViews)
                 .setContentIntent(contentIntent)
+                .setChannelId(CHANNEL_ID)
                 .build();
 
         startForeground(MediaPlayerState.NOTIF_ID, builder.build());
@@ -301,7 +299,7 @@ public class ShabadPlayerForegroundService extends Service {
     }
 
     public class LocalBinder extends Binder {
-        ShabadPlayerForegroundService getService() {
+        public ShabadPlayerForegroundService getService() {
             return ShabadPlayerForegroundService.this;
         }
     }
