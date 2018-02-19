@@ -1,7 +1,6 @@
 package com.sehaj.bani.player.presenter;
 
 import android.app.Activity;
-import android.graphics.Color;
 
 import com.sehaj.bani.R;
 import com.sehaj.bani.player.model.ShabadPlayerInteractor;
@@ -70,9 +69,9 @@ public class ShabadPlayerPresenterImpl implements ShabadPlayerPresenter, ShabadP
     public void changeShabadView(int color_position){
         int color_id = 0;
         if (color_position == 0){
-            color_id = Color.WHITE;
+            color_id = R.color.white;
         }else if(color_position == 1){
-            color_id = Color.BLACK;
+            color_id = R.color.black;
         }else if(color_position == 2){
             color_id = R.color.sepia;
         }else if(color_position == 3){

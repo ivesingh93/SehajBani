@@ -13,5 +13,7 @@
     <color name="googleDark">#c93e2c</color>
 
     <color name="sepia">#EBE3CC</color>
+    <color name="white">#FFFF</color>
+    <color name="black">#000</color>
     <color name="green">#CFFCCF</color>
 </resources>
