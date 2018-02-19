@@ -17,6 +17,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Html;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -29,6 +30,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
@@ -61,7 +63,6 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
     private Typeface gurbani_lipi_face;
     private ArrayList<Shabad> shabadsList;
     private Shabad current_shabad;
-
     private ScrollView gurbani_SV;
     private SimpleExoPlayerView simpleExoPlayerView;
     private SimpleExoPlayer player;
@@ -71,7 +72,6 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
     private int originalShabadIndex = 0;
     public ShowShabadReceiver showShabadReceiver;
     private ShabadDialog shabadDialog;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,90 +126,10 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
         LocalBroadcastManager.getInstance(this).unregisterReceiver(showShabadReceiver);
     }
 
-    private void doBindService() {
-        // Establish a connection with the service.  We use an explicit
-        // class name because we want a specific service implementation that
-        // we know will be running in our own process (and thus won't be
-        // supporting component replacement by other applications).
-        bindService(new Intent(ShabadPlayerActivity.this,
-                ShabadPlayerForegroundService.class), mConnection, Context.BIND_AUTO_CREATE);
-        isBound = true;
-    }
-
-    private void doUnbindService() {
-        if (isBound) {
-            // Detach our existing connection.
-            unbindService(mConnection);
-            isBound = false;
-        }
-    }
-
-    private ServiceConnection mConnection = new ServiceConnection() {
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            shabadPlayerForegroundService = ((ShabadPlayerForegroundService.LocalBinder) service).getService();
-            player = shabadPlayerForegroundService.getPlayer();
-            simpleExoPlayerView.setPlayer(player);
-
-        }
-
-        public void onServiceDisconnected(ComponentName className) {
-            shabadPlayerForegroundService = null;
-        }
-    };
-
-    private boolean isServiceRunning() {
-        ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-        assert manager != null;
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if ("domain.com.player.MyForegroundPlayerService".equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     @Override
     public void changeShabadColor(int color){
         gurbani_SV.setBackgroundResource(color);
 
-    }
-
-    public void onTranslationSelected(View view){
-        boolean checked = ((CheckBox) view).isChecked();
-
-        switch(view.getId()){
-            case R.id.teeka_CB:
-                shabadDialog.setTeeka(checked);
-                break;
-
-            case R.id.punjabi_CB:
-                shabadDialog.setPunjabi(checked);
-                break;
-
-            case R.id.english_CB:
-                shabadDialog.setEnglish(checked);
-                break;
-        }
-        shabadPlayerPresenterImpl.prepareTranslation(shabadDialog.isTeeka(), shabadDialog.isPunjabi(), shabadDialog.isEnglish());
-    }
-
-    private String teeka_null_case(String pad_arth, String arth){
-        String teeka = "";
-        if(pad_arth.equals("") || arth.equals("")){
-            if(pad_arth.equals("") && !arth.equals(""))
-                teeka = TEEKA_ARTH_FONT + arth + DOUBLE_BREAK;
-
-            if(!pad_arth.equals("") && arth.equals(""))
-                teeka = TEEKA_PAD_ARTH_FONT + pad_arth + DOUBLE_BREAK;
-
-            if(pad_arth.equals("") && arth.equals(""))
-                teeka = SINGLE_BREAK;
-
-        }else{
-            teeka = TEEKA_PAD_ARTH_FONT + pad_arth + SINGLE_BREAK + TEEKA_ARTH_FONT + arth + DOUBLE_BREAK;
-        }
-
-        return teeka;
     }
 
     @Override
@@ -263,11 +183,12 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
 
     @Override
     public void initPlayer() {
-        simpleExoPlayerView = findViewById(R.id.player);
-        player = ExoPlayerFactory.newSimpleInstance(this, new DefaultTrackSelector());
-        simpleExoPlayerView.setPlayer(player);
 
         if(!isServiceRunning()){
+            simpleExoPlayerView = findViewById(R.id.player);
+            player = ExoPlayerFactory.newSimpleInstance(this, new DefaultTrackSelector());
+            simpleExoPlayerView.setPlayer(player);
+            Log.i("Player", "I come in");
             Intent intent = new Intent(this, ShabadPlayerForegroundService.class);
             intent.putExtra(MediaPlayerState.RAAGI_NAME, current_shabad.getRaagiName());
             intent.putExtra(MediaPlayerState.SHABAD_TITLES, shabadTitles);
@@ -275,6 +196,8 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
             intent.putExtra(MediaPlayerState.ORIGINAL_SHABAD, originalShabadIndex);
             startService(intent);
             doBindService();
+        }else{
+
         }
     }
 
@@ -286,15 +209,6 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
         current_shabad.setTeekaPadArthList(fetched_shabad.getTeekaPadArthList());
         current_shabad.setTeekaArthList(fetched_shabad.getTeekaArthList());
         current_shabad.setEnglishList(fetched_shabad.getEnglishList());
-    }
-
-    private void showCurrentShabad(int showShabadIndex){
-        current_shabad = shabadsList.get(showShabadIndex);
-        shabad_player_AB.setTitle(current_shabad.getShabadEnglishTitle());
-        raagi_name_TV.setText(current_shabad.getRaagiName());
-        shabad_title_TV.setText(current_shabad.getShabadEnglishTitle());
-        shabadPlayerPresenterImpl.prepareShabad(current_shabad.getStartingId(), current_shabad.getEndingId());
-        shabadPlayerPresenterImpl.prepareTranslation(shabadDialog.isTeeka(), shabadDialog.isPunjabi(), shabadDialog.isEnglish());
     }
 
     @Override
@@ -387,6 +301,95 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
             shabad_text.append(teeka_null_case(current_shabad.getTeekaPadArthList().get(i), current_shabad.getTeekaArthList().get(i)));
         }
         gurbani_TV.setText(Html.fromHtml(shabad_text.toString().replace("<>", "&lt&gt") + "<br><br>"));
+    }
+
+    private void doBindService() {
+        // Establish a connection with the service.  We use an explicit
+        // class name because we want a specific service implementation that
+        // we know will be running in our own process (and thus won't be
+        // supporting component replacement by other applications).
+        bindService(new Intent(ShabadPlayerActivity.this,
+                ShabadPlayerForegroundService.class), mConnection, Context.BIND_AUTO_CREATE);
+        isBound = true;
+    }
+
+    private void doUnbindService() {
+        if (isBound) {
+            // Detach our existing connection.
+            unbindService(mConnection);
+            isBound = false;
+        }
+    }
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            shabadPlayerForegroundService = ((ShabadPlayerForegroundService.LocalBinder) service).getService();
+            player = shabadPlayerForegroundService.getPlayer();
+            simpleExoPlayerView.setPlayer(player);
+
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+            shabadPlayerForegroundService = null;
+        }
+    };
+
+    private boolean isServiceRunning() {
+        ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        assert manager != null;
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if ("com.sehaj.bani.player.service.ShabadPlayerForegroundService".equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void showCurrentShabad(int showShabadIndex){
+        current_shabad = shabadsList.get(showShabadIndex);
+        shabad_player_AB.setTitle(current_shabad.getShabadEnglishTitle());
+        raagi_name_TV.setText(current_shabad.getRaagiName());
+        shabad_title_TV.setText(current_shabad.getShabadEnglishTitle());
+        shabadPlayerPresenterImpl.prepareShabad(current_shabad.getStartingId(), current_shabad.getEndingId());
+        shabadPlayerPresenterImpl.prepareTranslation(shabadDialog.isTeeka(), shabadDialog.isPunjabi(), shabadDialog.isEnglish());
+    }
+
+    public void onTranslationSelected(View view){
+        boolean checked = ((CheckBox) view).isChecked();
+
+        switch(view.getId()){
+            case R.id.teeka_CB:
+                shabadDialog.setTeeka(checked);
+                break;
+
+            case R.id.punjabi_CB:
+                shabadDialog.setPunjabi(checked);
+                break;
+
+            case R.id.english_CB:
+                shabadDialog.setEnglish(checked);
+                break;
+        }
+        shabadPlayerPresenterImpl.prepareTranslation(shabadDialog.isTeeka(), shabadDialog.isPunjabi(), shabadDialog.isEnglish());
+    }
+
+    private String teeka_null_case(String pad_arth, String arth){
+        String teeka = "";
+        if(pad_arth.equals("") || arth.equals("")){
+            if(pad_arth.equals("") && !arth.equals(""))
+                teeka = TEEKA_ARTH_FONT + arth + DOUBLE_BREAK;
+
+            if(!pad_arth.equals("") && arth.equals(""))
+                teeka = TEEKA_PAD_ARTH_FONT + pad_arth + DOUBLE_BREAK;
+
+            if(pad_arth.equals("") && arth.equals(""))
+                teeka = SINGLE_BREAK;
+
+        }else{
+            teeka = TEEKA_PAD_ARTH_FONT + pad_arth + SINGLE_BREAK + TEEKA_ARTH_FONT + arth + DOUBLE_BREAK;
+        }
+
+        return teeka;
     }
 
     public class ShowShabadReceiver extends BroadcastReceiver{

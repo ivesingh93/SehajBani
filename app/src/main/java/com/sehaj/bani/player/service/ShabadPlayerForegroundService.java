@@ -100,7 +100,7 @@ public class ShabadPlayerForegroundService extends Service {
                 int latestWindowsIndex = player.getCurrentWindowIndex();
                 if(latestWindowsIndex != lastWindowIndex){
                     showNotification();
-                    Log.i("Show shabad", ""+latestWindowsIndex);
+                    Log.i("Player", lastWindowIndex + " " + latestWindowsIndex );
                     showShabad(latestWindowsIndex);
                     lastWindowIndex = latestWindowsIndex;
                 }
