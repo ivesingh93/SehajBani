@@ -18,7 +18,7 @@
         android:background="#323232"
         app:menu="@menu/menu_navigation"
         app:itemIconTint="@drawable/bottom_navigation_view_icon_color"
-        app:itemTextColor="@color/khalsa"
+        app:itemTextColor="@color/appThemeColor"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 

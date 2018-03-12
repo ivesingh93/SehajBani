@@ -14,4 +14,8 @@
 
     <color name="sepia">#EBE3CC</color>
     <color name="green">#CFFCCF</color>
+    <color name="white">#FFF</color>
+    <color name="black">#000</color>
+
+    <color name="appThemeColor">#e75e59</color>
 </resources>

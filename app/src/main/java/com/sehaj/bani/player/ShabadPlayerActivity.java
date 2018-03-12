@@ -72,6 +72,7 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
     private int originalShabadIndex = 0;
     public ShowShabadReceiver showShabadReceiver;
     private ShabadDialog shabadDialog;
+    private boolean mServiceConnected = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -124,6 +125,12 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
     protected void onDestroy() {
         super.onDestroy();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(showShabadReceiver);
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
     }
 
     @Override
@@ -197,7 +204,18 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
             startService(intent);
             doBindService();
         }else{
-
+            if (!mServiceConnected) {
+                doBindService();
+                simpleExoPlayerView = findViewById(R.id.player);
+                player = ExoPlayerFactory.newSimpleInstance(this, new DefaultTrackSelector());
+                simpleExoPlayerView.setPlayer(player);
+            }
+            Intent intent = new Intent(this, ShabadPlayerForegroundService.class);
+            intent.putExtra(MediaPlayerState.RAAGI_NAME, current_shabad.getRaagiName());
+            intent.putExtra(MediaPlayerState.SHABAD_TITLES, shabadTitles);
+            intent.putExtra(MediaPlayerState.SHABAD_LINKS, shabadLinks);
+            intent.putExtra(MediaPlayerState.ORIGINAL_SHABAD, originalShabadIndex);
+            startService(intent);
         }
     }
 
@@ -213,8 +231,10 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
 
     @Override
     public void getIntentValues() {
-        shabadsList = getIntent().getExtras().getParcelableArrayList("shabads");
-        current_shabad = getIntent().getExtras().getParcelable("current_shabad");
+        if (getIntent() != null&&getIntent().hasExtra("shabads")) {
+            shabadsList = getIntent().getExtras().getParcelableArrayList("shabads");
+            current_shabad = getIntent().getExtras().getParcelable("current_shabad");
+        }
     }
 
     @Override
@@ -326,11 +346,12 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
             shabadPlayerForegroundService = ((ShabadPlayerForegroundService.LocalBinder) service).getService();
             player = shabadPlayerForegroundService.getPlayer();
             simpleExoPlayerView.setPlayer(player);
-
+            mServiceConnected = true;
         }
 
         public void onServiceDisconnected(ComponentName className) {
             shabadPlayerForegroundService = null;
+            mServiceConnected = false;
         }
     };
 
@@ -393,6 +414,7 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
     }
 
     public class ShowShabadReceiver extends BroadcastReceiver{
+
         @Override
         public void onReceive(Context context, Intent intent) {
 

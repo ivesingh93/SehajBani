@@ -77,7 +77,7 @@ public class ShabadPlayerForegroundService extends Service {
         remoteViews = new RemoteViews(getPackageName(), R.layout.notification_player);
         TrackSelection.Factory trackSelectionFactory = new AdaptiveTrackSelection.Factory(new DefaultBandwidthMeter());
         trackSelector = new DefaultTrackSelector(trackSelectionFactory);
-        player = ExoPlayerFactory.newSimpleInstance(this, trackSelector);
+        initPlayer();
         player.addListener(new Player.DefaultEventListener() {
             @Override
             public void onPlayerError(ExoPlaybackException error) {
@@ -122,9 +122,6 @@ public class ShabadPlayerForegroundService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null && intent.hasExtra(MediaPlayerState.SHABAD_LINKS)) {
-            if (player.getPlayWhenReady()) {
-                initPlayer();
-            }
 
             raagi_name = intent.getStringExtra(MediaPlayerState.RAAGI_NAME);
             shabad_links = intent.getExtras().getStringArray(MediaPlayerState.SHABAD_LINKS);
@@ -267,7 +264,7 @@ public class ShabadPlayerForegroundService extends Service {
             player = ExoPlayerFactory.newSimpleInstance(this, trackSelector);
         } else {
             player.release();
-
+            return;
         }
     }
 
