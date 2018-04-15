@@ -1,7 +1,6 @@
 package com.sehaj.bani.player.presenter;
 
 import android.app.Activity;
-import android.graphics.Color;
 
 import com.sehaj.bani.R;
 import com.sehaj.bani.player.model.ShabadPlayerInteractor;

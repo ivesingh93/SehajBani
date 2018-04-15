@@ -7,30 +7,22 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.graphics.Typeface;
-import android.graphics.drawable.ColorDrawable;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.text.Html;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
-import android.widget.ImageButton;
 import android.widget.ScrollView;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
@@ -41,8 +33,6 @@ import com.sehaj.bani.player.service.MediaPlayerState;
 import com.sehaj.bani.player.service.ShabadPlayerForegroundService;
 import com.sehaj.bani.player.view.ShabadPlayerView;
 import com.sehaj.bani.rest.model.raagi.Shabad;
-
-import android.support.v7.app.AlertDialog;
 
 import java.util.ArrayList;
 
@@ -57,6 +47,7 @@ import static com.sehaj.bani.Constants.TEEKA_PAD_ARTH_FONT;
 
 public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPlayerView {
 
+    public ShowShabadReceiver showShabadReceiver;
     private ShabadPlayerPresenterImpl shabadPlayerPresenterImpl;
     private ActionBar shabad_player_AB;
     private TextView gurbani_TV, raagi_name_TV, shabad_title_TV;
@@ -70,9 +61,27 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
     private ShabadPlayerForegroundService shabadPlayerForegroundService;
     private String[] shabadLinks, shabadTitles;
     private int originalShabadIndex = 0;
-    public ShowShabadReceiver showShabadReceiver;
     private ShabadDialog shabadDialog;
+<<<<<<< HEAD
     private boolean mServiceConnected = false;
+=======
+    //boolean to keep track of servive connection
+    private boolean mServiceConnected = false;
+    private ServiceConnection mConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            shabadPlayerForegroundService = ((ShabadPlayerForegroundService.LocalBinder) service).getService();
+            player = shabadPlayerForegroundService.getPlayer();
+            simpleExoPlayerView.setPlayer(player);
+            mServiceConnected = true;
+
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+            shabadPlayerForegroundService = null;
+            mServiceConnected = false;
+        }
+    };
+>>>>>>> 58b3461ff939adb32d17583181fb2a7a44c8bf78
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,8 +92,8 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
         shabadPlayerPresenterImpl.init();
         LocalBroadcastManager.getInstance(this).registerReceiver(showShabadReceiver, new IntentFilter(MediaPlayerState.SHOW_SHABAD));
 
-        //TODO - When back button is pressed from this page and a new shabad is clicked, it doesn't play the shabad.
-        //TODO - App crashes when on raagiDetail page and notification is on top and next/prev button is pressed.
+        //TODO - When back button is pressed from this page and a new shabad is clicked, it doesn't play the shabad. {solved-aman}
+        //TODO - App crashes when on raagiDetail page and notification is on top and next/prev button is pressed. {It is because you have coded such that whenever this activity is started it has certain dependencies (eg sabad list, current sabad etc) which it does not get when this activity is created by tapping on the notification while the app is not running. So wire up this activity in such a way that it can be stated by clicking on the notification }
         //TODO - Set Volume to Mid High
 
     }
@@ -97,7 +106,7 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()) {
+        switch (item.getItemId()) {
             case android.R.id.home:
                 onBackPressed();
                 break;
@@ -128,6 +137,7 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
     }
 
     @Override
+<<<<<<< HEAD
     public void onBackPressed() {
         super.onBackPressed();
         finish();
@@ -135,12 +145,16 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
 
     @Override
     public void changeShabadColor(int color){
+=======
+    public void changeShabadColor(int color) {
+>>>>>>> 58b3461ff939adb32d17583181fb2a7a44c8bf78
         gurbani_SV.setBackgroundResource(color);
 
     }
 
     @Override
     public void initUI() {
+
         shabad_player_AB = getSupportActionBar();
         gurbani_TV = findViewById(R.id.gurbani_TV);
         raagi_name_TV = findViewById(R.id.raagi_name_TV);
@@ -163,11 +177,11 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
     }
 
     @Override
-    public void generateShabadsData(){
+    public void generateShabadsData() {
 
-        for(int i = 0; i < shabadsList.size(); i++){
+        for (int i = 0; i < shabadsList.size(); i++) {
             shabadLinks[i] = shabadsList.get(i).getShabadUrl().replace(" ", "+");
-            if(shabadsList.get(i).getShabadUrl().equals(current_shabad.getShabadUrl())){
+            if (shabadsList.get(i).getShabadUrl().equals(current_shabad.getShabadUrl())) {
                 originalShabadIndex = i;
             }
             shabadTitles[i] = shabadsList.get(i).getShabadEnglishTitle();
@@ -191,7 +205,7 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
     @Override
     public void initPlayer() {
 
-        if(!isServiceRunning()){
+        if (!isServiceRunning()) {
             simpleExoPlayerView = findViewById(R.id.player);
             player = ExoPlayerFactory.newSimpleInstance(this, new DefaultTrackSelector());
             simpleExoPlayerView.setPlayer(player);
@@ -203,7 +217,11 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
             intent.putExtra(MediaPlayerState.ORIGINAL_SHABAD, originalShabadIndex);
             startService(intent);
             doBindService();
+<<<<<<< HEAD
         }else{
+=======
+        } else {
+>>>>>>> 58b3461ff939adb32d17583181fb2a7a44c8bf78
             if (!mServiceConnected) {
                 doBindService();
                 simpleExoPlayerView = findViewById(R.id.player);
@@ -241,7 +259,7 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
     public void showGurmukhi() {
 
         StringBuilder shabad_text = new StringBuilder();
-        for(int i = 0; i < current_shabad.getShabadSize(); i++){
+        for (int i = 0; i < current_shabad.getShabadSize(); i++) {
             shabad_text.append(GURBANI_FONT + current_shabad.getGurmukhiList().get(i) + BIG_FONT_SINGLE_BREAK);
             shabad_text.append("<br>");
         }
@@ -251,7 +269,7 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
     @Override
     public void showGurmukhiTeeka() {
         StringBuilder shabad_text = new StringBuilder();
-        for(int i = 0; i < current_shabad.getShabadSize(); i++){
+        for (int i = 0; i < current_shabad.getShabadSize(); i++) {
             shabad_text.append(GURBANI_FONT + current_shabad.getGurmukhiList().get(i) + BIG_FONT_SINGLE_BREAK);
             shabad_text.append(teeka_null_case(current_shabad.getTeekaPadArthList().get(i), current_shabad.getTeekaArthList().get(i)));
         }
@@ -261,7 +279,7 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
     @Override
     public void showGurmukhiPunjabi() {
         StringBuilder shabad_text = new StringBuilder();
-        for(int i = 0; i < current_shabad.getShabadSize(); i++){
+        for (int i = 0; i < current_shabad.getShabadSize(); i++) {
             shabad_text.append(GURBANI_FONT + current_shabad.getGurmukhiList().get(i) + BIG_FONT_SINGLE_BREAK);
             shabad_text.append(PUNJABI_FONT + current_shabad.getPunjabiList().get(i) + DOUBLE_BREAK);
         }
@@ -271,7 +289,7 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
     @Override
     public void showGurmukhiEnglish() {
         StringBuilder shabad_text = new StringBuilder();
-        for(int i = 0; i < current_shabad.getShabadSize(); i++){
+        for (int i = 0; i < current_shabad.getShabadSize(); i++) {
             shabad_text.append(GURBANI_FONT + current_shabad.getGurmukhiList().get(i) + BIG_FONT_SINGLE_BREAK);
             shabad_text.append(ENGLISH_FONT + current_shabad.getEnglishList().get(i) + DOUBLE_BREAK);
         }
@@ -281,7 +299,7 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
     @Override
     public void showGurmukhiTeekaPunjabi() {
         StringBuilder shabad_text = new StringBuilder();
-        for(int i = 0; i < current_shabad.getShabadSize(); i++){
+        for (int i = 0; i < current_shabad.getShabadSize(); i++) {
             shabad_text.append(GURBANI_FONT + current_shabad.getGurmukhiList().get(i) + BIG_FONT_SINGLE_BREAK);
             shabad_text.append(PUNJABI_FONT + current_shabad.getPunjabiList().get(i) + SINGLE_BREAK);
             shabad_text.append(teeka_null_case(current_shabad.getTeekaPadArthList().get(i), current_shabad.getTeekaArthList().get(i)));
@@ -292,7 +310,7 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
     @Override
     public void showGurmukhiTeekaEnglish() {
         StringBuilder shabad_text = new StringBuilder();
-        for(int i = 0; i < current_shabad.getShabadSize(); i++){
+        for (int i = 0; i < current_shabad.getShabadSize(); i++) {
             shabad_text.append(GURBANI_FONT + current_shabad.getGurmukhiList().get(i) + BIG_FONT_SINGLE_BREAK);
             shabad_text.append(ENGLISH_FONT + current_shabad.getEnglishList().get(i) + SINGLE_BREAK);
             shabad_text.append(teeka_null_case(current_shabad.getTeekaPadArthList().get(i), current_shabad.getTeekaArthList().get(i)));
@@ -303,7 +321,7 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
     @Override
     public void showGurmukhiPunjabiEnglish() {
         StringBuilder shabad_text = new StringBuilder();
-        for(int i = 0; i < current_shabad.getShabadSize(); i++){
+        for (int i = 0; i < current_shabad.getShabadSize(); i++) {
             shabad_text.append(GURBANI_FONT + current_shabad.getGurmukhiList().get(i) + BIG_FONT_SINGLE_BREAK);
             shabad_text.append(PUNJABI_FONT + current_shabad.getPunjabiList().get(i) + SINGLE_BREAK);
             shabad_text.append(ENGLISH_FONT + current_shabad.getEnglishList().get(i) + DOUBLE_BREAK);
@@ -314,7 +332,7 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
     @Override
     public void showGurmukhiTeekaPunjabiEnglish() {
         StringBuilder shabad_text = new StringBuilder();
-        for(int i = 0; i < current_shabad.getShabadSize(); i++){
+        for (int i = 0; i < current_shabad.getShabadSize(); i++) {
             shabad_text.append(GURBANI_FONT + current_shabad.getGurmukhiList().get(i) + BIG_FONT_SINGLE_BREAK);
             shabad_text.append(PUNJABI_FONT + current_shabad.getPunjabiList().get(i) + SINGLE_BREAK);
             shabad_text.append(ENGLISH_FONT + current_shabad.getEnglishList().get(i) + SINGLE_BREAK);
@@ -341,6 +359,7 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
         }
     }
 
+<<<<<<< HEAD
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             shabadPlayerForegroundService = ((ShabadPlayerForegroundService.LocalBinder) service).getService();
@@ -355,6 +374,8 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
         }
     };
 
+=======
+>>>>>>> 58b3461ff939adb32d17583181fb2a7a44c8bf78
     private boolean isServiceRunning() {
         ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
         assert manager != null;
@@ -366,7 +387,7 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
         return false;
     }
 
-    private void showCurrentShabad(int showShabadIndex){
+    private void showCurrentShabad(int showShabadIndex) {
         current_shabad = shabadsList.get(showShabadIndex);
         shabad_player_AB.setTitle(current_shabad.getShabadEnglishTitle());
         raagi_name_TV.setText(current_shabad.getRaagiName());
@@ -375,10 +396,10 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
         shabadPlayerPresenterImpl.prepareTranslation(shabadDialog.isTeeka(), shabadDialog.isPunjabi(), shabadDialog.isEnglish());
     }
 
-    public void onTranslationSelected(View view){
+    public void onTranslationSelected(View view) {
         boolean checked = ((CheckBox) view).isChecked();
 
-        switch(view.getId()){
+        switch (view.getId()) {
             case R.id.teeka_CB:
                 shabadDialog.setTeeka(checked);
                 break;
@@ -394,31 +415,41 @@ public class ShabadPlayerActivity extends AppCompatActivity implements ShabadPla
         shabadPlayerPresenterImpl.prepareTranslation(shabadDialog.isTeeka(), shabadDialog.isPunjabi(), shabadDialog.isEnglish());
     }
 
-    private String teeka_null_case(String pad_arth, String arth){
+    private String teeka_null_case(String pad_arth, String arth) {
         String teeka = "";
-        if(pad_arth.equals("") || arth.equals("")){
-            if(pad_arth.equals("") && !arth.equals(""))
+        if (pad_arth.equals("") || arth.equals("")) {
+            if (pad_arth.equals("") && !arth.equals(""))
                 teeka = TEEKA_ARTH_FONT + arth + DOUBLE_BREAK;
 
-            if(!pad_arth.equals("") && arth.equals(""))
+            if (!pad_arth.equals("") && arth.equals(""))
                 teeka = TEEKA_PAD_ARTH_FONT + pad_arth + DOUBLE_BREAK;
 
-            if(pad_arth.equals("") && arth.equals(""))
+            if (pad_arth.equals("") && arth.equals(""))
                 teeka = SINGLE_BREAK;
 
-        }else{
+        } else {
             teeka = TEEKA_PAD_ARTH_FONT + pad_arth + SINGLE_BREAK + TEEKA_ARTH_FONT + arth + DOUBLE_BREAK;
         }
 
         return teeka;
     }
 
+<<<<<<< HEAD
     public class ShowShabadReceiver extends BroadcastReceiver{
 
+=======
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
+    }
+
+    public class ShowShabadReceiver extends BroadcastReceiver {
+>>>>>>> 58b3461ff939adb32d17583181fb2a7a44c8bf78
         @Override
         public void onReceive(Context context, Intent intent) {
 
-            if(intent.getAction() != null){
+            if (intent.getAction() != null) {
                 int showShabadIndex = intent.getIntExtra(MediaPlayerState.SHOW_SHABAD, 0);
                 showCurrentShabad(showShabadIndex);
             }
