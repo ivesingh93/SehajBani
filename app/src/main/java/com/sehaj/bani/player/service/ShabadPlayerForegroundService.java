@@ -98,12 +98,15 @@ public class ShabadPlayerForegroundService extends Service {
             @Override
             public void onPositionDiscontinuity(int reason) {
                 int latestWindowsIndex = player.getCurrentWindowIndex();
-                if(latestWindowsIndex != lastWindowIndex){
+
+                //TODO - When shabad of same index is picked, the shabad doesn't show but the audio plays. ==> FIXED!
+                Log.i("Index", latestWindowsIndex + "  " + lastWindowIndex);
+                //if(latestWindowsIndex != lastWindowIndex || latestWindowsIndex == lastWindowIndex){
                     showNotification();
                     Log.i("Player", lastWindowIndex + " " + latestWindowsIndex );
                     showShabad(latestWindowsIndex);
                     lastWindowIndex = latestWindowsIndex;
-                }
+                //}
 
             }
         });

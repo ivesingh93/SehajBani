@@ -166,13 +166,15 @@
                 android:id="@+id/exo_progress"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.1"
-                android:layout_marginTop="10dp"
+                android:layout_weight="0.65"
+                app:touch_target_height="50dp"
+                app:scrubber_enabled_size="15dp"
+                app:scrubber_dragged_size="25dp"
+                android:paddingTop="20dp"
+                android:paddingBottom="20dp"
                 app:played_color="@color/appThemeColor"
                 app:buffered_color="@color/appThemeColor"
-                app:scrubber_color="@color/appThemeColor"
-                android:layout_marginBottom="10dp"
-                android:paddingBottom="10dp" />
+                app:scrubber_color="@color/appThemeColor" />
 
             <LinearLayout
                 android:layout_width="match_parent"
